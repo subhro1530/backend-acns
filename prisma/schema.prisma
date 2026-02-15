@@ -1,0 +1,279 @@
+// Prisma Schema for ACNS Backend
+// Advanced Cloud & Network Solutions
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Admin User Model
+model AdminUser {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  password     String
+  firstName    String?
+  lastName     String?
+  role         AdminRole @default(ADMIN)
+  isActive     Boolean  @default(true)
+  lastLogin    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("admin_users")
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  ADMIN
+  EDITOR
+}
+
+// Blog Model
+model Blog {
+  id           String   @id @default(uuid())
+  title        String
+  slug         String   @unique
+  excerpt      String?
+  content      String
+  coverImage   String?
+  author       String?
+  category     String?
+  tags         String[]
+  isPublished  Boolean  @default(false)
+  publishedAt  DateTime?
+  viewCount    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("blogs")
+}
+
+// Product Model
+model Product {
+  id           String   @id @default(uuid())
+  name         String
+  slug         String   @unique
+  description  String?
+  shortDesc    String?
+  price        Decimal? @db.Decimal(10, 2)
+  images       String[]
+  features     String[]
+  category     String?
+  status       ProductStatus @default(DRAFT)
+  isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("products")
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  DISCONTINUED
+}
+
+// Service Model
+model Service {
+  id           String   @id @default(uuid())
+  name         String
+  slug         String   @unique
+  description  String?
+  shortDesc    String?
+  icon         String?
+  image        String?
+  features     String[]
+  isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("services")
+}
+
+// Job Opening Model
+model JobOpening {
+  id           String   @id @default(uuid())
+  title        String
+  slug         String   @unique
+  department   String?
+  location     String?
+  type         JobType  @default(FULL_TIME)
+  experience   String?
+  salary       String?
+  description  String
+  requirements String[]
+  benefits     String[]
+  isActive     Boolean  @default(true)
+  deadline     DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  applications JobApplication[]
+
+  @@map("job_openings")
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+  REMOTE
+}
+
+// Job Application Model
+model JobApplication {
+  id           String   @id @default(uuid())
+  jobId        String
+  job          JobOpening @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  firstName    String
+  lastName     String
+  email        String
+  phone        String?
+  resumeUrl    String?
+  coverLetter  String?
+  linkedIn     String?
+  portfolio    String?
+  status       ApplicationStatus @default(PENDING)
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("job_applications")
+}
+
+enum ApplicationStatus {
+  PENDING
+  REVIEWED
+  SHORTLISTED
+  INTERVIEWED
+  HIRED
+  REJECTED
+}
+
+// Testimonial Model
+model Testimonial {
+  id           String   @id @default(uuid())
+  name         String
+  title        String?
+  company      String?
+  content      String
+  rating       Int      @default(5)
+  image        String?
+  isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("testimonials")
+}
+
+// Contact Request Model
+model ContactRequest {
+  id           String   @id @default(uuid())
+  name         String
+  email        String
+  phone        String?
+  company      String?
+  subject      String?
+  message      String
+  status       ContactStatus @default(NEW)
+  notes        String?
+  repliedAt    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("contact_requests")
+}
+
+enum ContactStatus {
+  NEW
+  READ
+  REPLIED
+  ARCHIVED
+}
+
+// Media File Model
+model MediaFile {
+  id           String   @id @default(uuid())
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  url          String
+  alt          String?
+  folder       String?
+  uploadedBy   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("media_files")
+}
+
+// Website Settings Model (Singleton Pattern)
+model WebsiteSettings {
+  id              String   @id @default("main")
+  
+  // Company Info
+  companyName     String   @default("ACNS")
+  companyFullName String   @default("Advanced Cloud & Network Solutions")
+  tagline         String?
+  founderName     String   @default("Shaswata Saha")
+  
+  // Contact Info
+  contactEmail    String?
+  supportEmail    String?
+  phone           String?
+  alternatePhone  String?
+  address         String?
+  
+  // Social Media Links
+  facebook        String?
+  twitter         String?
+  linkedin        String?
+  instagram       String?
+  youtube         String?
+  github          String?
+  
+  // Hero Section
+  heroTitle       String?
+  heroSubtitle    String?
+  heroDescription String?
+  heroCta         String?
+  heroCtaLink     String?
+  heroImage       String?
+  
+  // About Section
+  aboutTitle      String?
+  aboutDescription String?
+  aboutImage      String?
+  mission         String?
+  vision          String?
+  
+  // Footer Info
+  footerText      String?
+  copyrightText   String?
+  
+  // SEO Settings
+  metaTitle       String?
+  metaDescription String?
+  metaKeywords    String[]
+  
+  // Feature Toggles
+  showBlog        Boolean  @default(true)
+  showProducts    Boolean  @default(true)
+  showServices    Boolean  @default(true)
+  showCareers     Boolean  @default(true)
+  showTestimonials Boolean @default(true)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("website_settings")
+}
