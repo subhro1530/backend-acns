@@ -39,14 +39,32 @@ app.use(
 );
 
 // CORS configuration
+const corsOrigin = config.isProduction
+  ? config.cors.origin
+  : (origin, callback) => {
+      // In development, allow any localhost origin and tools like Postman (no origin)
+      if (
+        !origin ||
+        /^https?:\/\/localhost(:\d+)?$/.test(origin) ||
+        config.cors.origin.includes(origin)
+      ) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    };
+
 app.use(
   cors({
-    origin: config.cors.origin,
+    origin: corsOrigin,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   }),
 );
+
+// Explicitly handle preflight
+app.options("*", cors());
 
 // Rate limiting
 const limiter = rateLimit({
